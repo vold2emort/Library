@@ -1,0 +1,4 @@
+User (model) -  book (one to one), login, logout, ...,register
+
+book (model) - (name, author, category, no_of_book -> 1), getbook(), returnbook()
+
