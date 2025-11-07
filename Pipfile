@@ -5,6 +5,11 @@ name = "pypi"
 
 [packages]
 django = "*"
+djangorestframework = "*"
+dj-rest-auth = "*"
+django-allauth = "*"
+requests = "*"
+drf-spectacular = "*"
 
 [dev-packages]
 
