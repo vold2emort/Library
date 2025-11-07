@@ -4,7 +4,7 @@ function Books() {
   const [books, setBooks] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/books/")
+    fetch("http://127.0.0.1:8000/api/v1/")
       .then((res) => res.json())
       .then((data) => setBooks(data))
       .catch((err) => console.error(err));
@@ -23,13 +23,13 @@ function Books() {
           {books.map((b) => (
             <tr key={b.id}>
               <td>{b.title}</td>
-              <td>{b.author}</td>
-              <td>{b.published_date}</td>
-              <td>
+              <td>{b.authors}</td>
+              {/* <td>{b.published_date}</td> */}
+              {/* <td>
                 <span className={`badge ${b.available ? "bg-success" : "bg-danger"}`}>
                   {b.available ? "Available" : "Borrowed"}
                 </span>
-              </td>
+              </td> */}
             </tr>
           ))}
         </tbody>
