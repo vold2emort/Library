@@ -55,6 +55,9 @@ INSTALLED_APPS = [
 
 ]
 
+# Custom User model
+AUTH_USER_MODEL = 'Books.User'
+
 MIDDLEWARE = [
     # at first
     'corsheaders.middleware.CorsMiddleware',
@@ -154,7 +157,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES':[
         'rest_framework.authentication.SessionAuthentication',
@@ -166,3 +169,4 @@ REST_FRAMEWORK = {
 # for default email-backend need for registration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1
+

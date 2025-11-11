@@ -1,5 +1,6 @@
 from django.db import models
 
+from django.contrib.auth.models import AbstractUser
 # Create your models here.
 
 
@@ -23,3 +24,16 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class User(AbstractUser):
+    borrowed_books = models.OneToOneField(
+        Book,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="borrower"
+    )
+
+    def __str__(self):
+        return self.username
