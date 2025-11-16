@@ -17,12 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from rest_framework_simplejwt.views import TokenBlacklistView
 from drf_spectacular.views import SpectacularAPIView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('api.urls')),
-    path('api-auth/', include('rest_framework.urls')), # for permissions
+    # path('api/v1/auth/', include('rest_framework.urls')),  # for browsable API login/logout(SessionAuthentication)
     path('api/v1/rest-auth/', include('dj_rest_auth.urls')), # login, logut, password
-    path('api/v1/rest-auth/registration/', include('dj_rest_auth.registration.urls')),
+    path('api/v1/rest-auth/registration/', include('dj_rest_auth.registration.urls')), # registration endpoints
+    
+    # path('api/v1/auth/logout/', TokenBlacklistView.as_view(), name='jwt_logout'),   # logout by blacklisting the refresh token
+     
+    # schema
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'), 
 ]

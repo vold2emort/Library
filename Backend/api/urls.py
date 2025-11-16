@@ -1,9 +1,17 @@
 from django.urls import path
+from rest_framework import routers
+from .views import BookViewSet, AutherViewSet, PublisherViewSet, GenreViewSet, CustomUserViewSet, BorrowedBookViewSet
 
-from .views import BookApiView, BookApiDetail, UserBookView
 
-urlpatterns = [
-    path('', BookApiView.as_view()),
-    path('<int:pk>', BookApiDetail.as_view()),
-    path('books/', UserBookView.as_view()), 
-]
+router = routers.DefaultRouter()    # automatic URL routing for viewsets
+
+router.register(r'books', BookViewSet)
+router.register(r'authors', AutherViewSet)
+router.register(r'publishers', PublisherViewSet)
+router.register(r'genres', GenreViewSet)
+router.register(r'users', CustomUserViewSet)
+router.register(r'borrowed-books', BorrowedBookViewSet)
+
+
+# The API URLs are now determined automatically by the router.
+urlpatterns = router.urls

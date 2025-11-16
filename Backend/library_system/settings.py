@@ -27,6 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Custom User model
+AUTH_USER_MODEL = 'Books.CustomUser'
 
 # Application definition
 
@@ -37,30 +39,71 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites', # registration
+    'django.contrib.sites',  # for allauth account registration
+    # local apps
+    'api',
+    'Books',
+
     # 3rd party
     'rest_framework',
-    'rest_framework.authtoken',
+    # 'rest_framework.authtoken',   # for token authentication
+    'rest_framework_simplejwt', # JWT authentication
+    'rest_framework_simplejwt.token_blacklist',  # to blacklist the JWT token
+    
+    # dj-rest-auth
+    'dj_rest_auth',      # REST auth endpoints (login, logout, password reset, etc)
+    'dj_rest_auth.registration', # 
+    
+    # all auth registration
     'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'dj_rest_auth',
-    'dj_rest_auth.registration',
+    'allauth.account',      # if email verification needed
+    'allauth.socialaccount',    
+    
     'drf_spectacular', # for schema/documentation
-    # Local 
-    'Books.apps.BooksConfig',
-    'api.apps.ApiConfig',
+    'django_filters',   # for filtering in DRF views
+
     # additional to handle CORS
     'corsheaders',   
-
 ]
 
-# Custom User model
-AUTH_USER_MODEL = 'Books.User'
+SITE_ID = 1  # for allauth account registration
+
+# Settings for dj-rest-auth
+REST_AUTH = {
+    'TOKEN_MODEL': None,  # to disable token model if using JWT
+    'USE_JWT': True,
+    'JWT_AUTH_REFRESH_COOKIE': 'jwt_refresh_token',  # cookie name for refresh token
+
+    # 'JWT_AUTH_HTTPONLY': True,  # default True, makes the cookie HttpOnly -> not accessible via JavaScript(helps prevent XSS attacks)
+}
+
+
+# REST Framework global settings
+# - Default: (authentication: Session + Basic, permission: AllowAny)
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# Settings for Simple JWT
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    
+    # Token rotation and blacklisting settings -> Prevents stolen refresh tokens from being re-used
+    "ROTATE_REFRESH_TOKENS": True,         # Generates NEW refresh token each refresh
+    "BLACKLIST_AFTER_ROTATION": True,     # Old refresh token becomes invalid    
+}
+
 
 MIDDLEWARE = [
-    # at first
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',    # to handle CORS(Cross-Origin Resource Sharing) ->must be at the top
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -68,15 +111,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',    
 
-    
+    'allauth.account.middleware.AccountMiddleware',  # for allauth account registration
 ]
 
-# Allow React (localhost:3000)
+# Allow React (localhost:5173) to access the Django backend
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
+
+CORS_ALLOW_CREDENTIALS = True    # Allow cookies to be included in cross-site HTTP requests (used for writing cookies in frontend)
 
 
 ROOT_URLCONF = 'library_system.urls'
@@ -151,22 +196,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-# Rest Settiing Added
-
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-    'DEFAULT_AUTHENTICATION_CLASSES':[
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication'
-    ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-}
-
-# for default email-backend need for registration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-SITE_ID = 1
 

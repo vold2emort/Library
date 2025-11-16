@@ -1,20 +1,33 @@
 from rest_framework import serializers
-
-from Books.models import Book, User
+from Books.models import Book, Author, Publisher, Genre, CustomUser, BorrowedBook
 
 
 class BookSerializer(serializers.ModelSerializer):
-    authors = serializers.StringRelatedField(many=True)
-    genres = serializers.StringRelatedField(many=True)
-    
     class Meta:
         model = Book
-        fields = ['id', 'title', 'authors', 'genres',]
+        fields = '__all__'
 
-
-class UserSerializer(serializers.ModelSerializer):
-    borrowed_books = BookSerializer(read_only=True)
-    
+class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['username', 'email', 'borrowed_books']
+        model = Author
+        fields = '__all__'
+
+class PublisherSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Publisher
+        fields = '__all__'
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = '__all__'
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        exclude = ['password']  # Exclude password from being exposed
+
+class BorrowedBookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BorrowedBook
+        fields = '__all__'
