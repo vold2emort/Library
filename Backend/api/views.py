@@ -89,8 +89,35 @@ class FeedbackViewSet(viewsets.ModelViewSet):
 class WishlistViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = WishlistSerializer
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'delete']    # (block wishlist deletion)
 
     queryset = Wishlist.objects.none()
     def get_queryset(self): # only show wishlist of logged in user
         return Wishlist.objects.filter(user=self.request.user)
+    
+    # prevent deletion of wishlist, only clear items
+    def destroy(self, request, *args, **kwargs):
+        return Response({'error': 'Wishlist deletion is not allowed. You can clear items using PATCH.'}, status=403)
+
+
+    @action(detail=True, methods=['post', 'delete'], url_path='books/(?P<book_id>[0-9]+)')  # /api/v1/wishlists/{pk}/books/{book_id}/
+    def add_remove_book(self, request, pk=None , book_id=None):
+        wishlist_obj = self.get_object()
+        if not book_id:
+            return Response({'error': 'book_id is required.'}, status=400)
+
+        book_id = int(book_id)        
+        current_books = wishlist_obj.books.values_list('id', flat=True)        
+        if request.method.lower() == 'post':
+            if book_id in current_books:
+                return Response({'message': 'Book already in wishlist.'}, status=200)
+            wishlist_obj.books.add(book_id)     # add book to wishlist (filter duplicates automatically behaves as set)
+            # wishlist_obj.save()   # unnecessary for M2M relations
+            return Response({'message': 'Book added to wishlist.'}, status=200)
+        
+        if request.method.lower() == 'delete':
+            if book_id not in current_books:
+                return Response({'message': 'Book not found in wishlist.'}, status=404)
+            wishlist_obj.books.remove(book_id)  # remove book from wishlist
+            return Response({'message': 'Book removed from wishlist.'}, status=200)
+        
