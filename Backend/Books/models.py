@@ -147,3 +147,18 @@ class Feedback(models.Model):
     class Meta:
         ordering = ['-created_at']  # recent feedback first
 
+
+class Wishlist(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='wishlist')
+    books = models.ManyToManyField(Book, blank=True, related_name='wishlisted_by')
+    id = models.AutoField(primary_key=True)
+    modified_at = models.DateTimeField(auto_now=True)   # tracks last update time
+
+    def __str__(self):
+        return f'Wishlist of {self.user.username}'
+    
+    '''
+    Future Update: Hybrid Wishlist 
+    Guest users can also create temporary wishlists stored in session/cookies,
+      which can be merged with their account wishlist upon registration/login.    
+    '''

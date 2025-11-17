@@ -4,8 +4,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import permissions
 
-from Books.models import Book, Author, Publisher, Genre, CustomUser, BorrowedBook, BookReview, Notification, Feedback
-from .serializers import BookSerializer, AuthorSerializer, PublisherSerializer, GenreSerializer, CustomUserSerializer, BorrowedBookSerializer, BookReviewSerializer, NotificationSerializer, FeedbackSerializer
+from Books.models import Book, Author, Publisher, Genre, CustomUser, BorrowedBook, BookReview, Notification, Feedback, Wishlist
+from .serializers import BookSerializer, AuthorSerializer, PublisherSerializer, GenreSerializer, CustomUserSerializer, BorrowedBookSerializer, BookReviewSerializer, NotificationSerializer, FeedbackSerializer, WishlistSerializer
 
 
 # Create your views here.
@@ -85,3 +85,12 @@ class FeedbackViewSet(viewsets.ModelViewSet):
     http_method_names = ['post']
 
     queryset = Feedback.objects.none()  # no get requests allowed so empty queryset
+
+class WishlistViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = WishlistSerializer
+    http_method_names = ['get', 'post', 'delete']
+
+    queryset = Wishlist.objects.none()
+    def get_queryset(self): # only show wishlist of logged in user
+        return Wishlist.objects.filter(user=self.request.user)
