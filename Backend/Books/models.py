@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
 class Book(models.Model):
@@ -90,3 +91,34 @@ class BorrowedBook(models.Model):
             )
         ]        
     ordering = ['-borrow_date']  # recent borrows first
+
+
+class BookReview(models.Model):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='reviews')
+    user= models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='book_reviews')
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    review_text = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    id = models.AutoField(primary_key=True)
+
+    def __str__(self):
+        return f'Review of {self.book.title} by {self.user.username if self.user else 'Anonymous User'} '
+    
+    class Meta:
+        ordering = ['-created_at', '-rating']  # recent and highest rated reviews first
+    
+
+class Notification(models.Model):
+    receiver = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=50)
+    message = models.TextField()
+    msg_type_choices = [
+        ('info', 'Info'),
+        ('warning', 'Warning'),
+        ('alert', 'Alert'),
+    ]
+    msg_type = models.CharField(max_length=10, choices=msg_type_choices, default='info')
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    id = models.AutoField(primary_key=True)
+

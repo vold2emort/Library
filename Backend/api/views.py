@@ -4,8 +4,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import permissions
 
-from Books.models import Book, Author, Publisher, Genre, CustomUser, BorrowedBook
-from .serializers import BookSerializer, AuthorSerializer, PublisherSerializer, GenreSerializer, CustomUserSerializer, BorrowedBookSerializer
+from Books.models import Book, Author, Publisher, Genre, CustomUser, BorrowedBook, BookReview, Notification
+from .serializers import BookSerializer, AuthorSerializer, PublisherSerializer, GenreSerializer, CustomUserSerializer, BorrowedBookSerializer, BookReviewSerializer, NotificationSerializer
 
 
 # Create your views here.
@@ -65,3 +65,17 @@ class BorrowedBookViewSet(viewsets.ModelViewSet):
         return Response({"message": "Hello, this is your borrowed books info!"})
 
 
+class BookReviewViewSet(viewsets.ModelViewSet):
+    queryset = BookReview.objects.all()
+    serializer_class = BookReviewSerializer
+    http_method_names = ['get', 'post']
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = NotificationSerializer
+    http_method_names = ['get', 'delete']
+
+    queryset = Notification.objects.none()  # to avoid DRF router basename warning
+    def get_queryset(self):
+        return Notification.objects.filter(receiver=self.request.user)
