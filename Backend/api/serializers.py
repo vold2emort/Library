@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from Books.models import Book, Author, Publisher, Genre, CustomUser, BorrowedBook, BookReview, Notification
+from Books.models import Book, Author, Publisher, Genre, CustomUser, BorrowedBook, BookReview, Notification, Feedback
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -42,3 +42,9 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = '__all__'
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = '__all__'
+    
