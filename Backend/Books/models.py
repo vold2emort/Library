@@ -122,3 +122,28 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     id = models.AutoField(primary_key=True)
 
+
+    '''Future Update: Duplicate notification if the same msg has to multiple users (instead of creating many to many relation -> complexity in marking read/unread for each user)
+    for user in CustomUser.objects.all():
+        Notification.objects.create(receiver=user, message="System update at 5 PM.")
+    '''
+
+class Feedback(models.Model):
+    sender = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='sent_feedbacks')
+    subject = models.CharField(max_length=100)
+    message = models.TextField()
+    feedback_type_choices = [
+        ('suggestion', 'Suggestion'),
+        ('complaint', 'Complaint'),
+        ('inquiry', 'Inquiry'),
+    ]
+    feedback_type = models.CharField(max_length=15, choices=feedback_type_choices, default='inquiry')
+    created_at = models.DateTimeField(auto_now_add=True)
+    id = models.AutoField(primary_key=True)
+    
+    def __str__(self):
+        return f'{self.feedback_type_choices} from {self.sender.username if self.sender else "Anonymous User"}: {self.subject}'
+
+    class Meta:
+        ordering = ['-created_at']  # recent feedback first
+
