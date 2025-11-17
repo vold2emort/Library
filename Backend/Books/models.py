@@ -12,7 +12,12 @@ class Book(models.Model):
     publisher = models.ForeignKey('Publisher', on_delete=models.CASCADE, related_name='books')
     feature_image = models.ImageField(default='books/default-book.jpg', upload_to='books/', blank=True)
     summary = models.TextField(null=True, blank=True)
+    stock = models.PositiveIntegerField(default=1)  # number of copies available    
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def is_available(self):
+        return self.stock > 0
 
     def __str__(self):
         return self.title
@@ -87,7 +92,7 @@ class BorrowedBook(models.Model):
             models.UniqueConstraint(
                 fields= ['user', 'book', 'is_returned'],
                 condition= models.Q(is_returned=False),  # only enforce uniqueness for active borrows (user can borrow same book again after returning)
-                name='unique_active_borrow'
+                name='unique_active_borrow',                
             )
         ]        
     ordering = ['-borrow_date']  # recent borrows first

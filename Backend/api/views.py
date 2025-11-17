@@ -17,12 +17,12 @@ class BookViewSet(viewsets.ModelViewSet):
 
     # DRF filters (complex filtering than custom ones) - less code, more functionality
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    # Fields to filter by
-    filterset_fields = ['author__name', 'genre__name', 'publisher__name', 'published_date']
+    # Fields to filter by query params
+    filterset_fields = ['author__name', 'genre__name', 'publisher__name', 'published_date'] # /?author__name=AuthorName&genre__name=GenreName
     # Ordering fields
-    ordering_fields = ['published_date', 'title']
+    ordering_fields = ['published_date', 'title']   # /?ordering=-published_date 
     # Search fields
-    search_fields = ['title', 'author__name', 'genre__name', 'publisher__name']
+    search_fields = ['title', 'author__name', 'genre__name', 'publisher__name']     # /?search=keyword
 
 
 class AutherViewSet(viewsets.ModelViewSet):
@@ -52,7 +52,7 @@ from rest_framework.response import Response
 class BorrowedBookViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = BorrowedBookSerializer
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'delete', 'patch']
 
     queryset = BorrowedBook.objects.none()  # to avoid basename warning in router else have to set basename in router
 
