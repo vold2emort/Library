@@ -1,12 +1,6 @@
 from django.contrib import admin
-from .models import Book, Author, Publisher, Genre, CustomUser, BorrowedBook, BookReview, Notification
+from .models import Book, Author, Publisher, Genre, CustomUser, BorrowedBook, BookReview, Notification, Feedback
 # Register your models here.
 
-admin.site.register(Book)
-admin.site.register(Author)
-admin.site.register(Publisher)
-admin.site.register(Genre)
-admin.site.register(CustomUser)
-admin.site.register(BorrowedBook)
-admin.site.register(BookReview)
-admin.site.register(Notification)
+for model in [Book, Author, Publisher, Genre, CustomUser, BorrowedBook, BookReview, Notification, Feedback]:
+    admin.site.register(model)
