@@ -7,6 +7,9 @@ from rest_framework import permissions
 from Books.models import Book, Author, Publisher, Genre, CustomUser, BorrowedBook, BookReview, Notification, Feedback, Wishlist
 from .serializers import BookSerializer, AuthorSerializer, PublisherSerializer, GenreSerializer, CustomUserSerializer, BorrowedBookSerializer, BookReviewSerializer, NotificationSerializer, FeedbackSerializer, WishlistSerializer
 
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from Books.services import safe_borrow, return_book
 
 # Create your views here.
 
@@ -46,9 +49,6 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     serializer_class = CustomUserSerializer
     http_method_names = ['get']
 
-from rest_framework.decorators import action
-from rest_framework.response import Response
-
 class BorrowedBookViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = BorrowedBookSerializer
@@ -63,6 +63,31 @@ class BorrowedBookViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])   # custom action at /api/v1/borrowed-books/info/    
     def info(self, request):
         return Response({"message": "Hello, this is your borrowed books info!"})
+    
+    def create(self, request, *args, **kwargs):    # as signal is not suitable for concurrency control
+        """ Override create to use safe_borrow service for concurrency control """
+        user = request.user
+        book_id = request.data.get('book')
+        borrowed_book = safe_borrow(user, book_id)
+        serializer = self.get_serializer(borrowed_book)      # serialize the created instance into response format
+        return Response(serializer.data, status=201)    # return created response
+    
+
+    def update(self, request, *args, **kwargs):   # override update to handle returns with concurrency control
+        instance = self.get_object()    # get the BorrowedBook instance being updated
+        request_return = request.data.get('is_returned')
+        
+        if instance.is_returned and request_return is False:    # True -> False not allowed            
+            return Response({'error': 'Cannot un-return a book once returned.'}, status=400)
+        
+        if instance.is_returned is False and request_return is True:   # False -> True (returning the book)
+            updated_borrow = return_book(instance.id)   # call the return_book service to handle return with concurrency control
+            serializer = self.get_serializer(updated_borrow)
+            return Response(serializer.data, status=200)
+        
+        print('No change in is_returned status, proceeding with default update.')            
+        return super().update(request, *args, **kwargs)  # for other updates, use default behavior e.g T-> T , F -> F       
+        
 
 
 class BookReviewViewSet(viewsets.ModelViewSet):
