@@ -13,19 +13,24 @@ def attempt_borrow(user, book_id):
         with transaction.atomic():  # require for concurrency control
             # book = Book.objects.get(id=book_id)
             book = Book.objects.select_for_update().get(id=book_id)  # lock the book record for this transaction (to prevent race condition) other threads will wait
+            if book.stock <= 0:
+                print(f"User {user.username} failed \t Book out of stock.")
+                return "Out of stock"
+            
             borrowed_book = BorrowedBook.objects.create(
                 user=user,
                 book=book,
                 valid_until='2024-12-31'  # example due date
             )
-            # decrement stock handled by signal        
+            book.stock -= 1     # without using signals to avoid concurrency issues
+            book.save()
             print(f"User {user.username} borrowed \t")
     except Exception as e:
-        print(f"User {user.username} failed to borrow \t")
+        print(f"User {user.username} failed to borrow \t Error: {str(e)}")
 
 
 ## assume book has only 1 stock available
-book_id = 2
+book_id = 4
 print("\nStarting concurrent borrow attempts...")
 book = Book.objects.get(id=book_id)
 print(f'Initial Book stock: {book.stock}\n')
