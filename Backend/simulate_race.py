@@ -6,27 +6,31 @@ django.setup()
 
 import threading
 from Books.models import CustomUser, Book, BorrowedBook
+from django.db import transaction
 
 def attempt_borrow(user, book_id):
     try:
-        book = Book.objects.get(id=book_id)
-        borrowed_book = BorrowedBook.objects.create(
-            user=user,
-            book=book,
-            valid_until='2024-12-31'  # example due date
-        )
-        print(f"User {user.username} borrowed \t")
+        with transaction.atomic():  # require for concurrency control
+            # book = Book.objects.get(id=book_id)
+            book = Book.objects.select_for_update().get(id=book_id)  # lock the book record for this transaction (to prevent race condition) other threads will wait
+            borrowed_book = BorrowedBook.objects.create(
+                user=user,
+                book=book,
+                valid_until='2024-12-31'  # example due date
+            )
+            # decrement stock handled by signal        
+            print(f"User {user.username} borrowed \t")
     except Exception as e:
         print(f"User {user.username} failed to borrow \t")
 
 
 ## assume book has only 1 stock available
-book_id = 7
+book_id = 2
 print("\nStarting concurrent borrow attempts...")
 book = Book.objects.get(id=book_id)
 print(f'Initial Book stock: {book.stock}\n')
 
-users = CustomUser.objects.filter(is_active=True)[:5]  # get first 5 active users
+users = CustomUser.objects.order_by('id').filter(is_active=True)[:5] # select first 5 active users
 # create threads for concurrent borrow attempts
 threads = []
 print(f"Race Started: {len(users)} users attempting to borrow book ID {book_id} concurrently.\n")
