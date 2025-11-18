@@ -1,6 +1,8 @@
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
-
+from django.contrib.auth.signals import user_logged_in
+from Books.models import Wishlist
+import json
 
 
 @receiver(pre_save, sender='Books.BorrowedBook')    
@@ -24,3 +26,20 @@ def book_borrow_return(sender, instance, **kwargs):
         must be called before saving BorrowedBook instance to have correct stock update
     '''
 
+
+@receiver(user_logged_in)
+def merge_wishlist_on_login(sender, request, **kwargs):     # no session used in JWT auth
+    user = request.user
+    wishlist_obj, created = Wishlist.objects.get_or_create(user=user)   # get if exists else create new
+    # get wishlist data from forntend local storage
+    wishlist = request.data.get('wishlist', '[]')
+    json_wishlist = json.loads(wishlist) if isinstance(wishlist, str) else wishlist # only parse if it's a string    
+
+    # for book in json_wishlist:        
+    #     book_id = int(book.get('id'))   # work for both dict and Book instances
+    #     wishlist_obj.books.add(book_id)  # add book to user's wishlist (duplicates automatically handled)
+
+    [wishlist_obj.books.add(int(book.get('id'))) for book in json_wishlist] # add all books from local storage to user's wishlist
+    wishlist_obj.save()     
+
+    print(f"Merged {len(json_wishlist)} wishlist items into user {user.username}'s wishlist on login.")   
