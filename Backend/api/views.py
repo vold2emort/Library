@@ -74,11 +74,48 @@ class BookReviewViewSet(viewsets.ModelViewSet):
 class NotificationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = NotificationSerializer
-    http_method_names = ['get', 'delete']
+    http_method_names = ['get', 'post', 'delete']
 
     queryset = Notification.objects.none()  # to avoid DRF router basename warning
     def get_queryset(self):
         return Notification.objects.filter(receiver=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def mark_as_read(self, request, *args, **kwargs):
+        notification_obj = self.get_object()
+        notification_obj.is_read = True
+        notification_obj.save()
+        return Response({'message': 'Notification marked as read.'}, status=200)
+    
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request, *args, **kargs):
+        user_unread_notifications = Notification.objects.filter(receiver=request.user, is_read=False)
+        for notification_obj in user_unread_notifications:
+            notification_obj.is_read = True
+            notification_obj.save()
+        return Response({'message': f'All ({len(user_unread_notifications)}) Unread Notifications marked as read.'}, status=200)
+    
+    @action(detail=False, methods=['delete'])
+    def delete_all(self, request, *args, **kargs):
+        user_notifications = Notification.objects.filter(receiver=request.user)
+        deleted_count, _ = user_notifications.delete()
+        return Response({'message': f'All ({deleted_count}) notifications deleted.'}, status=200)
+    
+    # prevent single notification deletion
+    def destroy(self, request, *args, **kwargs):
+        raise NotImplementedError("Single notification deletion is not allowed. Use delete_all action to delete all notifications.")
+    # prevent creation of notifications via API
+    def create(self, request, *args, **kwargs):
+        raise NotImplementedError("Creating notifications via API is not allowed.")
+    
+
+    ''' Future Update: Only allow librarian/admin to create notifications for users
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return Response({'error': 'Only librarians/admins can create notifications.'}, status=403)
+        return super().create(request, *args, **kwargs)
+    '''
+
 
 class FeedbackViewSet(viewsets.ModelViewSet):
     serializer_class = FeedbackSerializer
